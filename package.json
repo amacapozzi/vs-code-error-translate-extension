@@ -51,7 +51,7 @@
         "errorTranslate.nvidiaNim.model": {
           "type": "string",
           "default": "meta/llama-3.1-8b-instruct",
-          "description": "NVIDIA NIM model to use"
+          "description": "NVIDIA NIM model to use. Known models: meta/llama-3.1-8b-instruct, deepseek-ai/deepseek-v4-pro"
         }
       }
     }
