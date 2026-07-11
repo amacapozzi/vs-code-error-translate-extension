@@ -1,0 +1,74 @@
+{
+  "name": "error-translate",
+  "displayName": "Error Translate",
+  "description": "Translates VS Code diagnostic messages in real-time using AI APIs",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension",
+  "contributes": {
+    "configuration": {
+      "title": "Error Translate",
+      "properties": {
+        "errorTranslate.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable error translation"
+        },
+        "errorTranslate.targetLanguage": {
+          "type": "string",
+          "default": "es",
+          "description": "ISO 639-1 language code for translations (e.g. 'es', 'fr', 'pt')"
+        },
+        "errorTranslate.provider": {
+          "type": "string",
+          "enum": ["google", "groq", "nvidia"],
+          "default": "groq",
+          "description": "Translation provider to use"
+        },
+        "errorTranslate.googleTranslate.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Google Translate API key"
+        },
+        "errorTranslate.groq.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Groq API key"
+        },
+        "errorTranslate.groq.model": {
+          "type": "string",
+          "default": "llama-3.1-8b-instant",
+          "description": "Groq model to use"
+        },
+        "errorTranslate.nvidiaNim.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "NVIDIA NIM API key"
+        },
+        "errorTranslate.nvidiaNim.model": {
+          "type": "string",
+          "default": "meta/llama-3.1-8b-instruct",
+          "description": "NVIDIA NIM model to use"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "test": "jest",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.5",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  }
+}
