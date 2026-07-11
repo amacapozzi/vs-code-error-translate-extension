@@ -3,6 +3,9 @@ const vscode = {
     registerHoverProvider: jest.fn(),
     getDiagnostics: jest.fn()
   },
+  workspace: {
+    getConfiguration: jest.fn()
+  },
   window: {
     createStatusBarItem: jest.fn(() => ({
       text: '',

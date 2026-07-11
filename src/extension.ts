@@ -29,6 +29,7 @@ function buildTranslationService(
   const config = vscode.workspace.getConfiguration('errorTranslate');
 
   if (!config.get<boolean>('enabled', true)) {
+    outputChannel.appendLine('[error-translate] Extension disabled via settings');
     return null;
   }
 
