@@ -3,6 +3,7 @@
   "displayName": "Error Translate",
   "description": "Translates VS Code diagnostic messages in real-time using AI APIs",
   "version": "0.0.1",
+  "publisher": "local",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],
   "activationEvents": ["onStartupFinished"],
