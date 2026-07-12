@@ -19,27 +19,38 @@ export class ErrorTranslateHoverProvider implements vscode.HoverProvider {
       return undefined;
     }
 
-    const lines: string[] = [];
-    for (const diagnostic of diagnostics) {
-      const severity = this.severityLabel(diagnostic.severity);
+    const md = new vscode.MarkdownString();
+    md.isTrusted = true;
+    md.supportThemeIcons = true;
+
+    for (let i = 0; i < diagnostics.length; i++) {
+      if (i > 0) {
+        md.appendMarkdown('\n\n---\n\n');
+      }
+      const diagnostic = diagnostics[i];
+      const badge = this.severityBadge(diagnostic.severity);
       try {
         const translated = await this.translationService.translate(diagnostic.message);
-        lines.push(`**${severity}:** ${translated}`);
+        md.appendMarkdown(`${badge}&nbsp; ${translated}`);
       } catch (err) {
         this.outputChannel.appendLine(`[error-translate] Translation failed: ${err}`);
-        lines.push(`**${severity}:** ${diagnostic.message}`);
+        md.appendMarkdown(`${badge}&nbsp; ${diagnostic.message}`);
       }
     }
 
-    return new vscode.Hover(new vscode.MarkdownString(lines.join('\n\n')));
+    return new vscode.Hover(md);
   }
 
-  private severityLabel(severity: vscode.DiagnosticSeverity): string {
+  private severityBadge(severity: vscode.DiagnosticSeverity): string {
     switch (severity) {
-      case vscode.DiagnosticSeverity.Error: return 'Error';
-      case vscode.DiagnosticSeverity.Warning: return 'Warning';
-      case vscode.DiagnosticSeverity.Information: return 'Info';
-      default: return 'Hint';
+      case vscode.DiagnosticSeverity.Error:
+        return '<span style="background:#f14c4c;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Error</span>';
+      case vscode.DiagnosticSeverity.Warning:
+        return '<span style="background:#cca700;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Warning</span>';
+      case vscode.DiagnosticSeverity.Information:
+        return '<span style="background:#3794ff;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Info</span>';
+      default:
+        return '<span style="background:#89d185;color:#1e1e1e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Hint</span>';
     }
   }
 }
