@@ -4,20 +4,41 @@ import { ErrorTranslateHoverProvider } from './hoverProvider';
 import { GoogleTranslateProvider } from './providers/googleTranslate';
 import { GroqProvider } from './providers/groq';
 import { NvidiaNimProvider } from './providers/nvidiaNim';
+import { DeepLProvider } from './providers/deepl';
 
 export function activate(context: vscode.ExtensionContext): void {
   const outputChannel = vscode.window.createOutputChannel('Error Translate');
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   context.subscriptions.push(outputChannel, statusBar);
 
-  const translationService = buildTranslationService(outputChannel, statusBar);
-  if (!translationService) {
-    return;
-  }
+  let hoverDisposable: vscode.Disposable | undefined;
 
-  const hoverProvider = new ErrorTranslateHoverProvider(translationService, outputChannel);
-  const disposable = vscode.languages.registerHoverProvider('*', hoverProvider);
-  context.subscriptions.push(disposable);
+  const register = () => {
+    hoverDisposable?.dispose();
+    hoverDisposable = undefined;
+    statusBar.hide();
+
+    const translationService = buildTranslationService(outputChannel, statusBar);
+    if (!translationService) {
+      return;
+    }
+
+    const hoverProvider = new ErrorTranslateHoverProvider(translationService, outputChannel);
+    hoverDisposable = vscode.languages.registerHoverProvider('*', hoverProvider);
+    outputChannel.appendLine('[error-translate] Provider registered successfully');
+  };
+
+  register();
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('errorTranslate')) {
+        outputChannel.appendLine('[error-translate] Configuration changed, re-registering...');
+        register();
+      }
+    }),
+    { dispose: () => hoverDisposable?.dispose() }
+  );
 }
 
 export function deactivate(): void {}
@@ -37,6 +58,14 @@ function buildTranslationService(
   const providerName = config.get<string>('provider', 'groq');
 
   switch (providerName) {
+    case 'deepl': {
+      const apiKey = config.get<string>('deepl.apiKey', '');
+      if (!apiKey) {
+        warnMissingKey(statusBar, 'DeepL', 'errorTranslate.deepl.apiKey');
+        return null;
+      }
+      return new TranslationService(new DeepLProvider(apiKey), 'deepl', targetLang);
+    }
     case 'google': {
       const apiKey = config.get<string>('googleTranslate.apiKey', '');
       if (!apiKey) {

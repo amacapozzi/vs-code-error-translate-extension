@@ -1,4 +1,6 @@
 .vscode/**
+.claude/**
+.superpowers/**
 src/**
 node_modules/**
 docs/**

@@ -4,7 +4,8 @@ const vscode = {
     getDiagnostics: jest.fn()
   },
   workspace: {
-    getConfiguration: jest.fn()
+    getConfiguration: jest.fn(),
+    onDidChangeConfiguration: jest.fn(() => ({ dispose: jest.fn() }))
   },
   window: {
     createStatusBarItem: jest.fn(() => ({

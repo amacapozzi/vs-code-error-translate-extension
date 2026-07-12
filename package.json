@@ -24,9 +24,14 @@
         },
         "errorTranslate.provider": {
           "type": "string",
-          "enum": ["google", "groq", "nvidia"],
-          "default": "groq",
+          "enum": ["deepl", "google", "groq", "nvidia"],
+          "default": "deepl",
           "description": "Translation provider to use"
+        },
+        "errorTranslate.deepl.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "DeepL API key (free keys end with :fx, use api-free.deepl.com automatically)"
         },
         "errorTranslate.googleTranslate.apiKey": {
           "type": "string",
