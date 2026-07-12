@@ -26,6 +26,9 @@ const vscode = {
   },
   MarkdownString: class {
     value: string = '';
+    isTrusted: boolean | object = false;
+    supportHtml: boolean = false;
+    supportThemeIcons: boolean = false;
     appendMarkdown(text: string) { this.value += text; return this; }
     constructor(value?: string) { this.value = value ?? ''; }
   },

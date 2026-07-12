@@ -19,38 +19,50 @@ export class ErrorTranslateHoverProvider implements vscode.HoverProvider {
       return undefined;
     }
 
-    const md = new vscode.MarkdownString();
-    md.isTrusted = true;
-    md.supportThemeIcons = true;
+    const parts: string[] = [];
 
     for (let i = 0; i < diagnostics.length; i++) {
       if (i > 0) {
-        md.appendMarkdown('\n\n---\n\n');
+        parts.push('<hr>');
       }
       const diagnostic = diagnostics[i];
-      const badge = this.severityBadge(diagnostic.severity);
+      const header = this.severityHeader(diagnostic.severity);
+
       try {
         const translated = await this.translationService.translate(diagnostic.message);
-        md.appendMarkdown(`${badge}&nbsp; ${translated}`);
+        parts.push(`${header}<br><br>${this.codeify(translated)}`);
       } catch (err) {
         this.outputChannel.appendLine(`[error-translate] Translation failed: ${err}`);
-        md.appendMarkdown(`${badge}&nbsp; ${diagnostic.message}`);
+        parts.push(`${header}<br><br>${this.codeify(diagnostic.message)}`);
       }
     }
+
+    const md = new vscode.MarkdownString(parts.join(''));
+    md.isTrusted = true;
+    md.supportHtml = true;
+    md.supportThemeIcons = true;
 
     return new vscode.Hover(md);
   }
 
-  private severityBadge(severity: vscode.DiagnosticSeverity): string {
+  // Wraps quoted terms in <code> chips (matches PTE's inline code style)
+  private codeify(text: string): string {
+    return text
+      .replace(/'([^']{1,60})'/g, '<code>$1</code>')
+      .replace(/«([^»]{1,60})»/g, '<code>$1</code>')
+      .replace(/"([^"]{1,60})"/g, '<code>$1</code>');
+  }
+
+  private severityHeader(severity: vscode.DiagnosticSeverity): string {
     switch (severity) {
       case vscode.DiagnosticSeverity.Error:
-        return '<span style="background:#f14c4c;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Error</span>';
+        return '<span style="color:#f14c4c;font-weight:700;">$(error) Error</span>';
       case vscode.DiagnosticSeverity.Warning:
-        return '<span style="background:#cca700;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Warning</span>';
+        return '<span style="color:#cca700;font-weight:700;">$(warning) Warning</span>';
       case vscode.DiagnosticSeverity.Information:
-        return '<span style="background:#3794ff;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Info</span>';
+        return '<span style="color:#3794ff;font-weight:700;">$(info) Info</span>';
       default:
-        return '<span style="background:#89d185;color:#1e1e1e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">Hint</span>';
+        return '<span style="color:#89d185;font-weight:700;">$(lightbulb) Hint</span>';
     }
   }
 }
