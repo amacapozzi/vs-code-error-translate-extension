@@ -46,6 +46,10 @@ describe('NativeHoverTranslateProvider', () => {
     const rendered = (result as any).contents.value as string;
     expect(rendered).toContain('ReadDir lee el directorio indicado.');
     expect(rendered).toContain('func os.ReadDir(name string) ([]os.DirEntry, error)');
+    // The fence marker must be preceded by a real newline (not an HTML <br>), otherwise
+    // markdown-it treats it as literal text instead of a fenced code block.
+    expect(rendered).toMatch(/\n```go/);
+    expect(rendered).not.toContain('<br>');
   });
 
   it('prepends a Translated badge header to the rendered hover', async () => {
@@ -122,7 +126,7 @@ describe('NativeHoverTranslateProvider', () => {
     expect(mockTranslationService.translate).not.toHaveBeenCalled();
   });
 
-  it('joins multiple third-party hovers with <hr>', async () => {
+  it('joins multiple third-party hovers with a markdown horizontal rule', async () => {
     const mdA = new (vscode as any).MarkdownString('First hover text.');
     const mdB = new (vscode as any).MarkdownString('Second hover text.');
     (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce([
@@ -139,6 +143,6 @@ describe('NativeHoverTranslateProvider', () => {
     const rendered = (result as any).contents.value as string;
     expect(rendered).toContain('Primer texto.');
     expect(rendered).toContain('Segundo texto.');
-    expect(rendered).toContain('<hr>');
+    expect(rendered).toContain('\n\n---\n\n');
   });
 });

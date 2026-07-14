@@ -41,13 +41,13 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
     const parts: string[] = [];
     for (let i = 0; i < hovers.length; i++) {
       if (i > 0) {
-        parts.push('<hr>');
+        parts.push('\n\n---\n\n');
       }
       parts.push(await this.translateHoverContents(hovers[i]));
     }
 
     const md = new vscode.MarkdownString(
-      `<span style="color:#3794ff;font-weight:700;">$(globe) Translated</span><br><br>${parts.join('')}`
+      `<span style="color:#3794ff;font-weight:700;">$(globe) Translated</span>\n\n${parts.join('')}`
     );
     md.supportHtml = true;
     md.supportThemeIcons = true;
@@ -77,6 +77,6 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
       }
     }
 
-    return rendered.join('<br><br>');
+    return rendered.join('\n\n');
   }
 }
