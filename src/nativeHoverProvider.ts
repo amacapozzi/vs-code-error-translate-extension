@@ -39,11 +39,19 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
     }
 
     const parts: string[] = [];
-    for (let i = 0; i < hovers.length; i++) {
-      if (i > 0) {
+    for (const hover of hovers) {
+      const translated = await this.translateHoverContents(hover);
+      if (!translated) {
+        continue;
+      }
+      if (parts.length > 0) {
         parts.push('\n\n---\n\n');
       }
-      parts.push(await this.translateHoverContents(hovers[i]));
+      parts.push(translated);
+    }
+
+    if (parts.length === 0) {
+      return undefined;
     }
 
     const md = new vscode.MarkdownString(
@@ -55,20 +63,32 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
     return new vscode.Hover(md);
   }
 
-  private async translateHoverContents(hover: vscode.Hover): Promise<string> {
+  // Returns undefined when a hover has no translatable prose (e.g. a bare type
+  // signature) so we don't show a redundant duplicate of the original native hover.
+  private async translateHoverContents(hover: vscode.Hover): Promise<string | undefined> {
     const rendered: string[] = [];
+    let hadProse = false;
 
     for (const content of hover.contents) {
-      const markdown = typeof content === 'string' ? content : (content as vscode.MarkdownString).value;
+      if (typeof content !== 'string' && 'language' in content) {
+        // Legacy MarkedString code object ({language, value}) — the whole item is
+        // code, never translate it; re-wrap it as a fence so it still renders.
+        rendered.push('```' + content.language + '\n' + content.value + '\n```');
+        continue;
+      }
+
+      const markdown = typeof content === 'string' ? content : content.value;
 
       try {
         const segments = splitCodeAndProse(markdown);
         const translatedSegments = await Promise.all(
-          segments.map(segment =>
-            segment.type === 'code' || segment.text.trim() === ''
-              ? Promise.resolve(segment.text)
-              : this.translationService.translate(segment.text)
-          )
+          segments.map(segment => {
+            if (segment.type === 'code' || segment.text.trim() === '') {
+              return Promise.resolve(segment.text);
+            }
+            hadProse = true;
+            return this.translationService.translate(segment.text);
+          })
         );
         rendered.push(translatedSegments.join(''));
       } catch (err) {
@@ -77,6 +97,6 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
       }
     }
 
-    return rendered.join('\n\n');
+    return hadProse ? rendered.join('\n\n') : undefined;
   }
 }

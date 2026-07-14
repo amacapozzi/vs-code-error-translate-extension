@@ -29,6 +29,50 @@ describe('NativeHoverTranslateProvider', () => {
     expect(result).toBeUndefined();
   });
 
+  it('returns undefined for a hover that is entirely code (nothing to translate)', async () => {
+    const md = new (vscode as any).MarkdownString('```go\nvar completePath string\n```');
+    (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce([
+      new (vscode as any).Hover([md])
+    ]);
+
+    const provider = new NativeHoverTranslateProvider(mockTranslationService as any, mockOutputChannel as any, true);
+    const result = await provider.provideHover(makeDocument(), makePosition());
+
+    expect(result).toBeUndefined();
+    expect(mockTranslationService.translate).not.toHaveBeenCalled();
+  });
+
+  it('treats a legacy {language, value} MarkedString as code and never translates it', async () => {
+    (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce([
+      new (vscode as any).Hover([{ language: 'go', value: 'var completePath string' }])
+    ]);
+
+    const provider = new NativeHoverTranslateProvider(mockTranslationService as any, mockOutputChannel as any, true);
+    const result = await provider.provideHover(makeDocument(), makePosition());
+
+    expect(result).toBeUndefined();
+    expect(mockTranslationService.translate).not.toHaveBeenCalled();
+  });
+
+  it('omits a pure-code hover from a multi-hover result without a stray separator', async () => {
+    const codeOnly = new (vscode as any).MarkdownString('```go\nvar completePath string\n```');
+    const withProse = new (vscode as any).MarkdownString('ReadDir reads the named directory.');
+    (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce([
+      new (vscode as any).Hover([codeOnly]),
+      new (vscode as any).Hover([withProse])
+    ]);
+    mockTranslationService.translate.mockResolvedValueOnce('ReadDir lee el directorio indicado.');
+
+    const provider = new NativeHoverTranslateProvider(mockTranslationService as any, mockOutputChannel as any, true);
+    const result = await provider.provideHover(makeDocument(), makePosition());
+
+    expect(result).toBeDefined();
+    const rendered = (result as any).contents.value as string;
+    expect(rendered).toContain('ReadDir lee el directorio indicado.');
+    expect(rendered).not.toContain('---');
+    expect(mockTranslationService.translate).toHaveBeenCalledTimes(1);
+  });
+
   it('translates prose and preserves a fenced code block', async () => {
     const md = new (vscode as any).MarkdownString(
       'ReadDir reads the named directory.\n```go\nfunc os.ReadDir(name string) ([]os.DirEntry, error)\n```'
