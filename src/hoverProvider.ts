@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { TranslationService } from './translationService';
+import { isInternalFetch } from './hoverFetchGuard';
 
 export class ErrorTranslateHoverProvider implements vscode.HoverProvider {
   constructor(
@@ -11,6 +12,10 @@ export class ErrorTranslateHoverProvider implements vscode.HoverProvider {
     document: vscode.TextDocument,
     position: vscode.Position
   ): Promise<vscode.Hover | undefined> {
+    if (isInternalFetch()) {
+      return undefined;
+    }
+
     const diagnostics = vscode.languages
       .getDiagnostics(document.uri)
       .filter(d => d.range.contains(position));

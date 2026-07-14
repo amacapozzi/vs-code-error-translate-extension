@@ -88,4 +88,25 @@ describe('ErrorTranslateHoverProvider', () => {
     expect(mockTranslationService.translate).toHaveBeenCalledWith('error one');
     expect(mockTranslationService.translate).toHaveBeenCalledWith('error two');
   });
+
+  it('returns undefined immediately during an internal hover fetch', async () => {
+    const { withInternalFetchGuard } = require('./hoverFetchGuard');
+    const diagnostic = {
+      message: 'variable not used',
+      severity: vscode.DiagnosticSeverity.Error,
+      range: { contains: jest.fn().mockReturnValue(true) }
+    };
+    (vscode.languages.getDiagnostics as jest.Mock).mockReturnValue([diagnostic]);
+
+    const provider = new ErrorTranslateHoverProvider(mockTranslationService as any, mockOutputChannel as any);
+
+    let nestedResult: unknown = 'not-yet-set';
+    await withInternalFetchGuard(async () => {
+      nestedResult = await provider.provideHover(makeDocument(), makePosition());
+      return undefined;
+    });
+
+    expect(nestedResult).toBeUndefined();
+    expect(mockTranslationService.translate).not.toHaveBeenCalled();
+  });
 });
