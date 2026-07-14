@@ -46,7 +46,9 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
       parts.push(await this.translateHoverContents(hovers[i]));
     }
 
-    const md = new vscode.MarkdownString(parts.join(''));
+    const md = new vscode.MarkdownString(
+      `<span style="color:#3794ff;font-weight:700;">$(globe) Translated</span><br><br>${parts.join('')}`
+    );
     md.supportHtml = true;
     md.supportThemeIcons = true;
 

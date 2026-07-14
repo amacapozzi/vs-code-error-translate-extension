@@ -48,6 +48,22 @@ describe('NativeHoverTranslateProvider', () => {
     expect(rendered).toContain('func os.ReadDir(name string) ([]os.DirEntry, error)');
   });
 
+  it('prepends a Translated badge header to the rendered hover', async () => {
+    const md = new (vscode as any).MarkdownString('ReadDir reads the named directory.');
+    (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce([
+      new (vscode as any).Hover([md])
+    ]);
+    mockTranslationService.translate.mockResolvedValueOnce('ReadDir lee el directorio indicado.');
+
+    const provider = new NativeHoverTranslateProvider(mockTranslationService as any, mockOutputChannel as any, true);
+    const result = await provider.provideHover(makeDocument(), makePosition());
+
+    expect(result).toBeDefined();
+    const rendered = (result as any).contents.value as string;
+    expect(rendered).toContain('$(globe) Translated');
+    expect(rendered.indexOf('$(globe) Translated')).toBeLessThan(rendered.indexOf('ReadDir lee el directorio indicado.'));
+  });
+
   it('calls executeCommand wrapped by the internal fetch guard', async () => {
     const { isInternalFetch } = require('./hoverFetchGuard');
     (vscode.commands.executeCommand as jest.Mock).mockImplementationOnce(async () => {
