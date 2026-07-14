@@ -44,4 +44,10 @@ describe('activate / buildTranslationService', () => {
     activate(makeContext());
     expect(vscode.languages.registerHoverProvider).not.toHaveBeenCalled();
   });
+
+  it('registers both hover providers when a valid provider is configured', () => {
+    mockConfig({ provider: 'groq', 'groq.apiKey': 'test-key', enabled: true, 'hoverDocs.enabled': true });
+    activate(makeContext());
+    expect(vscode.languages.registerHoverProvider).toHaveBeenCalledTimes(2);
+  });
 });

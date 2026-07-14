@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { TranslationService } from './translationService';
 import { ErrorTranslateHoverProvider } from './hoverProvider';
+import { NativeHoverTranslateProvider } from './nativeHoverProvider';
 import { GoogleTranslateProvider } from './providers/googleTranslate';
 import { GroqProvider } from './providers/groq';
 import { NvidiaNimProvider } from './providers/nvidiaNim';
@@ -11,11 +12,11 @@ export function activate(context: vscode.ExtensionContext): void {
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   context.subscriptions.push(outputChannel, statusBar);
 
-  let hoverDisposable: vscode.Disposable | undefined;
+  let hoverDisposables: vscode.Disposable[] = [];
 
   const register = () => {
-    hoverDisposable?.dispose();
-    hoverDisposable = undefined;
+    hoverDisposables.forEach(d => d.dispose());
+    hoverDisposables = [];
     statusBar.hide();
 
     const translationService = buildTranslationService(outputChannel, statusBar);
@@ -23,8 +24,20 @@ export function activate(context: vscode.ExtensionContext): void {
       return;
     }
 
+    const config = vscode.workspace.getConfiguration('errorTranslate');
+    const hoverDocsEnabled = config.get<boolean>('hoverDocs.enabled', true);
+
     const hoverProvider = new ErrorTranslateHoverProvider(translationService, outputChannel);
-    hoverDisposable = vscode.languages.registerHoverProvider('*', hoverProvider);
+    const nativeHoverProvider = new NativeHoverTranslateProvider(
+      translationService,
+      outputChannel,
+      hoverDocsEnabled
+    );
+
+    hoverDisposables.push(
+      vscode.languages.registerHoverProvider('*', hoverProvider),
+      vscode.languages.registerHoverProvider('*', nativeHoverProvider)
+    );
     outputChannel.appendLine('[error-translate] Provider registered successfully');
   };
 
@@ -37,7 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
         register();
       }
     }),
-    { dispose: () => hoverDisposable?.dispose() }
+    { dispose: () => hoverDisposables.forEach(d => d.dispose()) }
   );
 }
 

@@ -17,6 +17,11 @@
           "default": true,
           "description": "Enable or disable error translation"
         },
+        "errorTranslate.hoverDocs.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Translate hover documentation from other extensions (e.g. language servers) into the target language"
+        },
         "errorTranslate.targetLanguage": {
           "type": "string",
           "default": "es",
