@@ -7,6 +7,9 @@ const vscode = {
     getConfiguration: jest.fn(),
     onDidChangeConfiguration: jest.fn(() => ({ dispose: jest.fn() }))
   },
+  commands: {
+    executeCommand: jest.fn()
+  },
   window: {
     createStatusBarItem: jest.fn(() => ({
       text: '',
