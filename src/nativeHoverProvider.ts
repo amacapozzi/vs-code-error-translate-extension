@@ -47,7 +47,6 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
     }
 
     const md = new vscode.MarkdownString(parts.join(''));
-    md.isTrusted = true;
     md.supportHtml = true;
     md.supportThemeIcons = true;
 
