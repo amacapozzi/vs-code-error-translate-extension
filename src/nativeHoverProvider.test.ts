@@ -93,6 +93,19 @@ describe('NativeHoverTranslateProvider', () => {
     );
   });
 
+  it('returns undefined and logs when the internal hover fetch itself rejects', async () => {
+    (vscode.commands.executeCommand as jest.Mock).mockRejectedValueOnce(new Error('fetch failed'));
+
+    const provider = new NativeHoverTranslateProvider(mockTranslationService as any, mockOutputChannel as any, true);
+    const result = await provider.provideHover(makeDocument(), makePosition());
+
+    expect(result).toBeUndefined();
+    expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+      expect.stringContaining('fetch failed')
+    );
+    expect(mockTranslationService.translate).not.toHaveBeenCalled();
+  });
+
   it('joins multiple third-party hovers with <hr>', async () => {
     const mdA = new (vscode as any).MarkdownString('First hover text.');
     const mdB = new (vscode as any).MarkdownString('Second hover text.');

@@ -18,15 +18,21 @@ export class NativeHoverTranslateProvider implements vscode.HoverProvider {
       return undefined;
     }
 
-    const hovers = await withInternalFetchGuard(() =>
-      Promise.resolve(
-        vscode.commands.executeCommand<vscode.Hover[]>(
-          'vscode.executeHoverProvider',
-          document.uri,
-          position
+    let hovers: vscode.Hover[] | undefined;
+    try {
+      hovers = await withInternalFetchGuard(() =>
+        Promise.resolve(
+          vscode.commands.executeCommand<vscode.Hover[]>(
+            'vscode.executeHoverProvider',
+            document.uri,
+            position
+          )
         )
-      )
-    );
+      );
+    } catch (err) {
+      this.outputChannel.appendLine(`[error-translate] Failed to fetch native hover content: ${err}`);
+      return undefined;
+    }
 
     if (!hovers || hovers.length === 0) {
       return undefined;
